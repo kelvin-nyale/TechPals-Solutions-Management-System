@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}TechPals | Register{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Register</h2>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <form action="" method="post">
+        {% csrf_token %}  <!-- Required for Django POST forms -->
+
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="Enter email" required>
+        </div>
+        <!-- <div class="mb-3">
+            <label for="image">Profile Image</label>
+            <input type="file" name="profile" class="form-control" placeholder="Choose file">
+        </div> -->
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" name="password" id="password" class="form-control" placeholder="Enter password" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="re-password" class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Confirm password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form> Already have an account?
+    <a href="{% url 'login' %}" class="btn btn-outline-success">Login Here</a>
+</div>
+{% endblock %}

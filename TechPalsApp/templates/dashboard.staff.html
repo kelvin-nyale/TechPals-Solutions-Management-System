@@ -1,0 +1,45 @@
+{% extends "base_staff.html" %}
+
+{% block title %}Staff Dashboard | TechPals Solutions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- <h1 class="mb-4">Staff Dashboard</h1> -->
+
+    <div class="alert alert-warning" role="alert">
+        Hello, <strong>{{ request.user.username }}</strong>! Here’s your workspace for managing assigned tasks.
+    </div>
+
+    <div class="row gy-4">
+
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">My Tasks</h5>
+                    <p class="card-text">Track your current and upcoming tasks, deadlines, and priorities.</p>
+                    <a href="#" class="btn btn-warning text-dark">View Tasks</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h5 class="card-title">Submit Reports</h5>
+                    <p class="card-text">Submit daily, weekly, or monthly reports on your work progress.</p>
+                    <a href="#" class="btn btn-info text-white">Submit Report</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+        <h4>Notifications</h4>
+        <ul class="list-group">
+            <li class="list-group-item">No new notifications</li>
+            <!-- Replace with dynamic notifications -->
+        </ul>
+    </div>
+</div>
+{% endblock %}
