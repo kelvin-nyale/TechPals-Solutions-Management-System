@@ -21,4 +21,9 @@ urlpatterns = [
     
     path('profile/update/', views.update_profile, name='profile_update'),
     
+    path('services/add/', views.add_service, name='add-service'),
+    path('services/', views.services, name='service-list'),
+    path('services/update/<int:service_id>/', views.update_service, name='update-service'),
+    path('services/delete/<int:service_id>/', views.delete_service, name='delete-service'),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

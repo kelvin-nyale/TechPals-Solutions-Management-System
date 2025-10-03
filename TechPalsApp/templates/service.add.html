@@ -1,0 +1,28 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+  <div class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4">Add New Service</h2>
+    <form method="post" action="{% url 'add-service' %}">
+      {% csrf_token %}
+      
+      <div class="mb-3">
+        <label for="service_name" class="form-label">Name</label>
+        <input type="text" id="service_name" name="service_name" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="service_description" class="form-label">Description</label>
+        <textarea id="service_description" name="service_description" rows="4" class="form-control" required></textarea>
+      </div>
+
+      <div class="mb-4">
+        <label for="service_price" class="form-label">Price</label>
+        <input type="number" id="service_price" name="service_price" step="0.01" class="form-control" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Add Service</button>
+      <a href="{% url 'service-list' %}" class="btn btn-secondary ms-2">← Back to Service List</a>
+    </form>
+  </div>
+{% endblock %}

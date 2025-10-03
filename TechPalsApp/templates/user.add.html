@@ -15,28 +15,33 @@
         {% csrf_token %}
 
         <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" class="form-control" required>
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" required>
+            <label class="form-label" for="email">Email</label>
+            <input type="email" id="email" name="email" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required>
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Role</label>
-            <select name="role" class="form-select" required>
+            <label class="form-label" for="role">Role</label>
+            <select id="role" name="role" class="form-select" required>
                 <option value="" disabled selected>Select Role</option>
                 <option value="admin">Admin</option>
                 <option value="staff">Staff</option>
                 <option value="user">User</option>
             </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="tech_stack">Tech Stack / Major</label>
+            <input type="text" id="tech_stack" name="tech_stack" class="form-control" placeholder="Enter tech stack or major">
         </div>
 
         <button type="submit" class="btn btn-success">Create User</button>

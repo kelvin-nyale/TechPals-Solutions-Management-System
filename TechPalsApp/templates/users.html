@@ -16,8 +16,10 @@
         {% endfor %}
     {% endif %}
 
-    {% if users %}
-        <div class="table-responsive">
+    {% if admins or staff or regular_users %}
+        {% if admins %}
+        <h4>Admins</h4>
+        <div class="table-responsive mb-4">
             <table class="table table-bordered table-hover table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
@@ -25,41 +27,118 @@
                         <th>Username</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Major</th>
                         <th>Date Joined</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for user in users %}
+                    {% for user in admins %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.email }}</td>
+                        <td><span class="badge bg-danger">Admin</span></td>
                         <td>
-                            {% if user.is_superuser %}
-                                <span class="badge bg-danger">Admin</span>
-                            {% elif user.is_staff %}
-                                <span class="badge bg-primary">Staff</span>
+                            {% if user.profile and user.profile.tech_stack %}
+                                {{ user.profile.tech_stack }}
                             {% else %}
-                                <span class="badge bg-secondary">User</span>
+                                <span class="text-muted">client</span>
                             {% endif %}
                         </td>
                         <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
                         <td>
                             <a href="{% url 'update-user' user.id %}" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="{% url 'delete-user' user.id %}"
-                                class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Are you sure you want to delete {{ user.username }}?');">
-                                Delete
-                            </a>
-
-                            <!-- Make these active with URLs when functionality is ready -->
+                            <a href="{% url 'delete-user' user.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ user.username }}?');">Delete</a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% endif %}
+
+        {% if staff %}
+        <h4>Staff</h4>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-hover table-striped align-middle">
+                <!-- <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Major</th>
+                        <th>Date Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead> -->
+                <tbody>
+                    {% for user in staff %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td><span class="badge bg-primary">Staff</span></td>
+                        <td>
+                            {% if user.profile and user.profile.tech_stack %}
+                                {{ user.profile.tech_stack }}
+                            {% else %}
+                                <span class="text-muted">client</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'update-user' user.id %}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{% url 'delete-user' user.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ user.username }}?');">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if regular_users %}
+        <h4>Clients</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-striped align-middle">
+                <!-- <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Major</th>
+                        <th>Date Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead> -->
+                <tbody>
+                    {% for user in regular_users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td><span class="badge bg-secondary">User</span></td>
+                        <td>
+                            {% if user.profile and user.profile.tech_stack %}
+                                {{ user.profile.tech_stack }}
+                            {% else %}
+                                <span class="text-muted">client</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'update-user' user.id %}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{% url 'delete-user' user.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ user.username }}?');">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     {% else %}
         <div class="alert alert-info">No users found.</div>
     {% endif %}

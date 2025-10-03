@@ -1,0 +1,12 @@
+{% extends 'base_template' %}
+
+{% block content %}
+  <h2>Service Details</h2>
+
+  <p><strong>Name:</strong> {{ service.service_name }}</p>
+  <p><strong>Description:</strong> {{ service.service_description }}</p>
+  <p><strong>Price:</strong> ${{ service.service_price }}</p>
+
+  <a href="{% url 'update-service' service.service_id %}">Edit</a> |
+  <a href="{% url 'service-list' %}">Back to List</a>
+{% endblock %}

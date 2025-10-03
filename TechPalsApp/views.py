@@ -4,7 +4,7 @@ from django.contrib import messages  # for flash messages
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required, user_passes_test
-from . models import Profile
+from . models import Profile, Service
 
 # Create your views here.
 def index(request):
@@ -120,12 +120,16 @@ def login_view(request):
 def admin_required(user):
     return user.is_authenticated and user.is_superuser
 
+def staff_required(user):
+    return user.is_authenticated and user.is_staff
+
 @login_required
 @user_passes_test(admin_required)
 def admin_dashboard(request):
     return render(request, 'dashboard.admin.html')
 
 @login_required
+@user_passes_test(staff_required)
 def staff_dashboard(request):
     return render(request, 'dashboard.staff.html')
 
@@ -148,6 +152,7 @@ def add_user(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         role = request.POST.get('role')
+        tech_stack = request.POST.get('tech_stack')
         
         if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
             messages.error(request, 'Username or Email already taken. Please choose another one!')
@@ -157,21 +162,33 @@ def add_user(request):
         is_staff = role in ['admin', 'staff']
         is_superuser = role == 'admin'
         
-        User.objects.create_user(
+        user = User.objects.create_user(
             username=username,
             email=email,
             password=password,
             is_staff=is_staff,
             is_superuser=is_superuser
         )
+        Profile.objects.create(user=user, tech_stack=tech_stack)
         return redirect('users')
     return render(request, 'user.add.html')
 
 @login_required
 @user_passes_test(admin_required)
 def users(request):
-    users = User.objects.all().order_by('-date_joined')
-    return render(request, 'users.html', {'users': users})
+    users = User.objects.select_related('profile').order_by('-date_joined')
+    
+    admins = users.filter(is_superuser=True)
+    staff = users.filter(is_staff=True, is_superuser=False)
+    regular_users = users.filter(is_staff=False, is_superuser=False)
+    
+    context = {
+        'admins': admins,
+        'staff': staff,
+        'regular_users': regular_users,
+    }
+    
+    return render(request, 'users.html', context)
 
 @login_required
 @user_passes_test(admin_required)
@@ -180,6 +197,7 @@ def update_user(request, pk):
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
+        tech_stack = request.POST.get('tech_stack')
         is_staff = request.POST.get('is_staff') == 'on'
         is_superuser = request.POST.get('is_superuser') == 'on'
         
@@ -194,9 +212,14 @@ def update_user(request, pk):
         
         user.username= username
         user.email= email
+        tech_stack=tech_stack
         user.is_staff = is_staff
         user.is_superuser = is_superuser
         user.save()
+        
+        # Update profile
+        user.profile.tech_stack = tech_stack
+        user.profile.save()
         
         messages.success(request, 'User updated successfully')
         return redirect('users')
@@ -254,3 +277,67 @@ def update_profile(request):
         'profile': profile,
         'base_template': base_template,
     })
+
+@login_required
+@user_passes_test(admin_required)
+def add_service(request):
+    
+    if request.method == 'POST':
+        service_name = request.POST.get('service_name')
+        service_description = request.POST.get('service_description')
+        service_price = request.POST.get('service_price')
+        
+        Service.objects.create(
+            service_name=service_name,
+            service_description=service_description,
+            service_price=service_price
+        )
+        return redirect('service-list')
+    
+    return render(request, 'service.add.html')
+
+def services(request):
+    services = Service.objects.all()
+    user = request.user
+    
+    if user.is_authenticated and user.is_superuser:
+        base_template = 'base_admin.html'
+    elif user.is_authenticated and user.is_staff:
+        base_template = 'base_staff.html'
+    else:
+        base_template = 'base_user.html'
+        
+    return render(request, 'services.html', {
+        'services': services,
+        'base_template': base_template,
+        'user': user
+    })
+
+@login_required
+@user_passes_test(admin_required)
+def update_service(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
+    
+    if request.method == 'POST':
+        service.service_name = request.POST.get('service_name')
+        service.service_description = request.POST.get('service_description')
+        service_price = request.POST.get('service_price')
+        
+        # Convert price safely
+        try:
+            service.service_price = float(service_price)
+        except (ValueError, TypeError):
+            service.service_price = 0  # or handle error differently
+        
+        service.save()
+        
+        return redirect('service-list')
+    return render(request, 'service.update.html', {'service': service})
+
+@login_required
+@user_passes_test(admin_required)
+def delete_service(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
+    service.delete()
+    messages.success(request, f'{service.service_name} deleted successfully')
+    return redirect('service-list')
