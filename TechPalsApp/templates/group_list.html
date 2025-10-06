@@ -1,0 +1,37 @@
+{% extends base_template %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>
+      {% if user.is_superuser %}
+        All Groups
+      {% else %}
+        Your Groups
+      {% endif %}
+    </h2>
+
+    <ul class="list-group mb-3">
+      {% for group in groups %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <a href="{% url 'group-chat' group.id %}">{{ group.group_name }}</a>
+          <div>
+            {% if user.is_superuser or user == group.group_leader %}
+              <a href="{% url 'group-edit' group.id %}" class="btn btn-sm btn-outline-secondary me-2">Edit</a>
+              <a href="{% url 'group-delete' group.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this group?');">Delete</a>
+            {% endif %}
+          </div>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">
+          {% if user.is_superuser %}
+            No groups have been created yet.
+          {% else %}
+            You are not a member of any groups yet.
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    <a href="{% url 'group-create' %}" class="btn btn-primary">Create a New Group</a>
+  </div>
+{% endblock %}

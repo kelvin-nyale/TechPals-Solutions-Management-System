@@ -17,9 +17,7 @@
     {% endif %}
 
     {% if admins or staff or regular_users %}
-        {% if admins %}
-        <h4>Admins</h4>
-        <div class="table-responsive mb-4">
+        <div class="table-responsive">
             <table class="table table-bordered table-hover table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
@@ -33,6 +31,11 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {# Admins group header #}
+                    {% if admins %}
+                    <tr class="table-primary">
+                        <td colspan="7" class="fw-bold">Admins</td>
+                    </tr>
                     {% for user in admins %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
@@ -43,7 +46,7 @@
                             {% if user.profile and user.profile.tech_stack %}
                                 {{ user.profile.tech_stack }}
                             {% else %}
-                                <span class="text-muted">client</span>
+                                <span class="text-muted">Manager</span>
                             {% endif %}
                         </td>
                         <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
@@ -53,27 +56,13 @@
                         </td>
                     </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
+                    {% endif %}
 
-        {% if staff %}
-        <h4>Staff</h4>
-        <div class="table-responsive mb-4">
-            <table class="table table-bordered table-hover table-striped align-middle">
-                <!-- <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Major</th>
-                        <th>Date Joined</th>
-                        <th>Actions</th>
+                    {# Staff group header #}
+                    {% if staff %}
+                    <tr class="table-primary">
+                        <td colspan="7" class="fw-bold">Staff</td>
                     </tr>
-                </thead> -->
-                <tbody>
                     {% for user in staff %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
@@ -94,27 +83,13 @@
                         </td>
                     </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
+                    {% endif %}
 
-        {% if regular_users %}
-        <h4>Clients</h4>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle">
-                <!-- <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Major</th>
-                        <th>Date Joined</th>
-                        <th>Actions</th>
+                    {# Users group header #}
+                    {% if regular_users %}
+                    <tr class="table-primary">
+                        <td colspan="7" class="fw-bold">Clients</td>
                     </tr>
-                </thead> -->
-                <tbody>
                     {% for user in regular_users %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
@@ -135,10 +110,10 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         </div>
-        {% endif %}
     {% else %}
         <div class="alert alert-info">No users found.</div>
     {% endif %}

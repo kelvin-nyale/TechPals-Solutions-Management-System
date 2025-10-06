@@ -1,0 +1,46 @@
+{# templates/groups/edit_group.html #}
+{% extends base_template %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Edit Group</h2>
+
+  {% if error %}
+    <div class="alert alert-danger">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="group_name" class="form-label">Group Name</label>
+      <input type="text" id="group_name" name="group_name" class="form-control" value="{{ group.group_name }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="group_leader" class="form-label">Group Leader</label>
+      <select id="group_leader" name="group_leader" class="form-select" required>
+        {% for user in users %}
+          <option value="{{ user.id }}" {% if group.group_leader.id == user.id %}selected{% endif %}>{{ user.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="group_members" class="form-label">Group Members</label>
+      <select id="group_members" name="group_members" multiple class="form-select" size="6" required>
+        {% for user in users %}
+          <option value="{{ user.id }}"
+            {% if user in group.group_members.all %}selected{% endif %}>{{ user.username }}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple members.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a href="{% url 'group-detail' group.id %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends base_template %}
+
+{% block content %}
+  <h2>{% if object %}Edit{% else %}Create{% endif %} Group</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">{% if object %}Update{% else %}Create{% endif %}</button>
+  </form>
+
+  <a href="{% url 'group_list' %}">Back to Groups</a>
+{% endblock %}

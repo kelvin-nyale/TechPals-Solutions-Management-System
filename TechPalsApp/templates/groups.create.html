@@ -1,0 +1,45 @@
+{% extends base_template %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Create Group</h2>
+
+  {% if error %}
+    <div class="alert alert-danger">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="name" class="form-label">Group Name</label>
+      <input type="text" id="group_name" name="group_name" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="leader" class="form-label">Group Leader</label>
+      <select id="group_leader" name="group_leader" class="form-select" required>
+        <option value="">-- Select Leader --</option>
+        {% for user in users %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="members" class="form-label">Group Members</label>
+      <select id="members" name="members" multiple class="form-select" size="6" required>
+        {% for user in users %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple members.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Group</button>
+    <a href="{% url 'group-list' %}" class="btn btn-secondary ms-2">Back to Group List</a>
+  </form>
+</div>
+{% endblock %}

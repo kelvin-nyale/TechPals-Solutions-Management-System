@@ -1,0 +1,74 @@
+{% extends base_template %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Group: {{ group.group_name }}</h2>
+  <p><strong>Leader:</strong> {{ group.group_leader.username }}</p>
+  <hr>
+
+  <!-- Chat messages container -->
+  <div id="chat-box" class="mb-4" style="height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background-color: #f8f9fa;">
+    {% for message in messages %}
+      <div class="mb-3 d-flex {% if message.sender == user %}justify-content-end{% else %}justify-content-start{% endif %}">
+        <div class="p-3 rounded 
+          {% if message.sender == user %}
+            bg-success text-white rounded-top-left-3 rounded-bottom-3 rounded-top-right-0
+          {% else %}
+            bg-secondary text-white rounded-top-right-3 rounded-bottom-3 rounded-top-left-0
+          {% endif %}" style="max-width: 70%;">
+          <strong>{{ message.sender.username }}</strong> <br>
+          <small class="text-light">{{ message.timestamp|date:"Y-m-d H:i" }}</small>
+          <p class="mb-0 mt-2 white-space-pre-wrap">
+            {{ message.content|linebreaksbr }}
+            {% if message.file %}
+              <br><a href="{{ message.file.url }}" target="_blank" class="text-light">📎 {{ message.file.name }}</a>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    {% empty %}
+      <p>No messages yet.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Chat message input form -->
+  <form method="post" action="{% url 'post-group-message' group.id %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="d-flex flex-column flex-md-row align-items-md-end gap-2">
+      <div class="flex-grow-1 position-relative">
+        <textarea 
+          name="content" 
+          class="form-control pe-5" 
+          rows="1" 
+          placeholder="Write a message..." 
+          required 
+          style="resize: vertical;"></textarea>
+
+        <!-- Icons container inside textarea -->
+        <div class="position-absolute end-0 top-50 translate-middle-y d-flex gap-2 me-2">
+          <!-- Attach file icon -->
+          <label for="file-upload" class="btn btn-outline-primary btn-sm m-0" title="Attach file" style="cursor:pointer;">
+            <i class="bi bi-paperclip"></i>
+          </label>
+          <input type="file" name="file" id="file-upload" class="d-none">
+
+          <!-- Send button -->
+          <button type="submit" class="btn btn-primary btn-sm" title="Send">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Auto scroll chat to bottom -->
+<script>
+  window.onload = function() {
+    var chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  };
+</script>
+{% endblock %}

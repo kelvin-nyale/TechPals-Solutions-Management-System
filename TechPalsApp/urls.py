@@ -26,4 +26,13 @@ urlpatterns = [
     path('services/update/<int:service_id>/', views.update_service, name='update-service'),
     path('services/delete/<int:service_id>/', views.delete_service, name='delete-service'),
     
+    path('groups/', views.group_list, name='group-list'),  # You might want to add this view
+    path('groups/create/', views.create_group, name='group-create'),
+    path('groups/<int:group_id>/', views.group_chat, name='group-chat'),
+    path('group/edit/<int:group_id>/', views.edit_group, name='group-edit'),
+    path('group/delete/<int:group_id>/', views.delete_group, name='group-delete'),
+    path('groups/<int:group_id>/post_message/', views.post_group_message, name='post-group-message'),
+    path('group-booking/<int:group_booking_id>/submit_report/', views.submit_group_report, name='submit-group-report'),
+    
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

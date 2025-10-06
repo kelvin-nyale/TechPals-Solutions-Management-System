@@ -1,0 +1,14 @@
+{% extends base_template %}
+
+{% block content %}
+  <h2>Submit Report for Group: {{ group.group_name }}</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="report_text" rows="10" cols="70" placeholder="Write your report here..." required></textarea><br><br>
+
+    <button type="submit">Submit Report</button>
+  </form>
+
+  <a href="{% url 'group-detail' group.id %}">Back to Group</a>
+{% endblock %}
