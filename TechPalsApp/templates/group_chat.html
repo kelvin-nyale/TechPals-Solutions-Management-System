@@ -1,9 +1,27 @@
 {% extends base_template %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2>Group: {{ group.group_name }}</h2>
+  <div class="container mt-4">
+    <h2 class="d-flex align-items-center justify-content-between">
+    Group: {{ group.group_name }}
+
+    {% if user.is_superuser or user == group.group_leader %}
+      <a href="{% url 'group-edit' group.id %}" class="btn btn-sm btn-outline-secondary" title="Edit Group">
+        <i class="bi bi-pencil-square"></i> Edit
+      </a>
+    {% endif %}
+  </h2>
+
   <p><strong>Leader:</strong> {{ group.group_leader.username }}</p>
+  <p><strong>Members:</strong>
+    {% for member in group.group_members.all %}
+      {{ member.username }}{% if not forloop.last %}, {% endif %}
+    {% empty %}
+      No members in this group.
+    {% endfor %}
+  </p>
+
+
   <hr>
 
   <!-- Chat messages container -->

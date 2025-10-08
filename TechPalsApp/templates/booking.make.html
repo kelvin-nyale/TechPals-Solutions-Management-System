@@ -1,0 +1,99 @@
+{% extends base_template %}
+
+{% block title %}Make a Booking{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Make a Booking</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        {% if request.user.is_superuser %}
+            <div class="mb-3">
+                <label for="booking_user" class="form-label">User</label>
+                <select name="booking_user" id="booking_user" class="form-select" required>
+                    <option value="" disabled selected>-- Select User --</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_user_id|stringformat:"s" %}selected{% endif %}>
+                            {{ user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">
+                    Please select a user.
+                </div>
+            </div>
+        {% else %}
+            <input type="hidden" name="booking_user" value="{{ request.user.id }}">
+            <p><strong>User:</strong> {{ request.user.username }}</p>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="booking_service" class="form-label">Service</label>
+            <select name="booking_service" id="booking_service" class="form-select" required>
+                <option value="" disabled selected>-- Select Service --</option>
+                {% for service in services %}
+                    <option value="{{ service.id }}" {% if service.id|stringformat:"s" == selected_service_id|stringformat:"s" %}selected{% endif %}>
+                        {{ service.service_name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Please select a service.
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="due_date" class="form-label">Due Date</label>
+            <input 
+                type="date" 
+                name="due_date" 
+                id="due_date" 
+                value="{{ input_due_date }}" 
+                class="form-control" 
+                required
+                min="{{ today|default:'' }}"
+            >
+            <div class="invalid-feedback">
+                Please select a valid due date.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Book</button>
+    </form>
+</div>
+
+<!-- Optional: Bootstrap client-side validation script -->
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+      'use strict'
+
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.querySelectorAll('.needs-validation')
+
+      // Loop over them and prevent submission
+      Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+          form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault()
+              event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+          }, false)
+        })
+    })()
+</script>
+{% endblock %}

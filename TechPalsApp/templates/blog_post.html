@@ -1,0 +1,35 @@
+{% extends base_template %}
+
+{% block title %}Create Blog Post | TechPals{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Create a New Blog Post</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Title</label>
+            {{ form.title }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_category" class="form-label">Category</label>
+            {{ form.category }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_content" class="form-label">Content</label>
+            {{ form.content }}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_image" class="form-label">Image</label>
+            {{ form.image }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Publish</button>
+        <a href="{% url 'blog-list' %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

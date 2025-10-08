@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} | TechPals Blog{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">{{ post.title }}</h1>
+    <p class="text-muted">
+        By {{ post.author.username }} | {{ post.published_date|date:"F j, Y" }}
+        {% if post.category %}
+            | <a href="{% url 'blog-category' post.category.slug %}">{{ post.category.name }}</a>
+        {% endif %}
+    </p>
+
+    {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded mb-4" style="max-height: 400px; object-fit: cover;">
+    {% endif %}
+
+    <div class="post-content mb-5">
+        {{ post.content|linebreaks }}
+    </div>
+
+    <a href="{% url 'blog-list' %}" class="btn btn-secondary">Back to Blog</a>
+</div>
+{% endblock %}

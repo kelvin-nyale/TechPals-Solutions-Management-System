@@ -18,7 +18,7 @@
     </button>
     <a class="navbar-brand text-dark" href="#"><strong>TechPals Solutions</strong></a>
     <div class="dropdown ms-auto">
-        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle fw-bolder" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <a href="#" class="d-flex align-items-center text-dark fw-bolder text-decoration-none dropdown-toggle fw-bolder" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
             <!-- Username -->
             {{ request.user.username }}
             <!-- Profile Image Circle -->
@@ -45,7 +45,12 @@
     <div class="offcanvas-body">
         <ul class="nav flex-column">
             <li class="nav-item"><a class="nav-link text-dark" href="{% url 'staff-dashboard' %}">Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link text-dark" href="#">Tasks</a></li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'task-list' %}">
+                    <i class="bi bi-list-check me-2"></i> Assigned Tasks
+                </a>
+            </li>
+            <li class="nav-item"><a class="nav-link text-dark" href="{% url 'booking-list' %}">Bookings</a></li>
             <li class="nav-item">
                 <a class="nav-link text-dark" href="{% url 'group-list' %}"> Groups</a>
             </li>
@@ -61,7 +66,10 @@
     <h5 class="mb-3">Staff Panel</h5>
     <ul class="nav flex-column">
         <li class="nav-item"><a class="nav-link text-dark" href="{% url 'staff-dashboard' %}">Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link text-dark" href="#">Tasks</a></li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" href="{% url 'task-list' %}">Assigned Tasks</a>
+        </li>
+        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'booking-list' %}">Bookings</a></li>
         <li class="nav-item">
             <a class="nav-link text-dark" href="{% url 'group-list' %}"> Groups</a>
         </li>

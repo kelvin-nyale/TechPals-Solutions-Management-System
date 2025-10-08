@@ -1,0 +1,55 @@
+{% extends base_template %}
+
+{% block title %}Update Booking{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Update Booking</h1>
+
+{% if messages %}
+  <ul class="list-unstyled">
+    {% for message in messages %}
+      <li class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="post" class="needs-validation" novalidate>
+  {% csrf_token %}
+
+  {% if request.user.is_superuser %}
+  <div class="mb-3">
+    <label for="bookingUser" class="form-label">User</label>
+    <select id="bookingUser" name="booking_user" class="form-select" required>
+      {% for user in users %}
+      <option value="{{ user.id }}" {% if user.id == booking.booking_user.id %}selected{% endif %}>{{ user.username }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% else %}
+  <div class="mb-3">
+    <label class="form-label">User</label>
+    <input type="text" class="form-control" value="{{ booking.booking_user.username }}" disabled>
+    <input type="hidden" name="booking_user" value="{{ booking.booking_user.id }}">
+  </div>
+  {% endif %}
+
+  <div class="mb-3">
+    <label for="bookingService" class="form-label">Service</label>
+    <select id="bookingService" name="booking_service" class="form-select" required>
+      {% for service in services %}
+      <option value="{{ service.id }}" {% if service.id == booking.booking_service.id %}selected{% endif %}>{{ service.service_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="dueDate" class="form-label">Due Date</label>
+    <input type="date" id="dueDate" name="due_date" class="form-control" value="{{ booking.due_date|date:'Y-m-d' }}" required>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Update Booking</button>
+  <a href="{% url 'booking-list' %}" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+{% endblock %}

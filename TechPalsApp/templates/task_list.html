@@ -1,0 +1,39 @@
+{% extends base_template %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Tasks</h2>
+
+  {% if request.user.is_superuser %}
+    <a href="{% url 'create-task' %}" class="btn btn-primary mb-3">Create New Task</a>
+  {% endif %}
+
+  {% if tasks %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      {% for task in tasks %}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Task: {{ task.title }}</h5>
+              <p class="card-text"><strong>Description:</strong> {{ task.description|default:"No description." }}</p>
+              <p><strong>Booking:</strong> {{ task.booking.booking_service.service_name }}</p>
+              <p><strong>Due Date:</strong> {{ task.due_date|date:"M d, Y" }}</p>
+              <p><strong>Group:</strong> {{ task.group.group_name }}</p>
+              <a href="{% url 'group-chat' task.group.id %}" class="btn btn-sm btn-outline-primary">Go to Group Chat</a>
+
+              {% if request.user.is_superuser %}
+                <div class="mt-2">
+                  <a href="{% url 'edit-task' task.id %}" class="btn btn-sm btn-warning">Update</a>
+                  <a href="{% url 'delete-task' task.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">No upcoming tasks assigned.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends base_template %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Update Task</h2>
+
+  {% if messages %}
+    <div>
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" id="title" name="title" class="form-control" required value="{{ task.title }}">
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea id="description" name="description" class="form-control" rows="3">{{ task.description }}</textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="due_date" class="form-label">Due Date</label>
+      <input type="date" id="due_date" name="due_date" class="form-control" required value="{{ task.due_date|date:'Y-m-d' }}">
+    </div>
+
+    <div class="mb-3">
+      <label for="booking" class="form-label">Booking</label>
+      <select id="booking" name="booking" class="form-select" required>
+        {% for booking in bookings %}
+          <option value="{{ booking.id }}" {% if booking.id == task.booking.id %}selected{% endif %}>
+            {{ booking.booking_service.service_name }} - {{ booking.booking_user.username }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="group" class="form-label">Group</label>
+      <select id="group" name="group" class="form-select" required>
+        {% for group in groups %}
+          <option value="{{ group.id }}" {% if group.id == task.group.id %}selected{% endif %}>{{ group.group_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Task</button>
+    <a href="{% url 'task-list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

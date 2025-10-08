@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Blog | TechPals Solutions{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 fw-bold text-center">TechPals Blog</h1>
+
+    <div class="row">
+        <!-- Blog Posts Column -->
+        <div class="col-md-8">
+            {% if posts %}
+                {% for post in posts %}
+                    <div class="d-flex mb-4 align-items-start">
+                        {% if post.image %}
+                            <a href="{% url 'blog-detail' post.slug %}">
+                                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="rounded me-3" style="width: 150px; height: 100px; object-fit: cover;">
+                            </a>
+                        {% endif %}
+
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">
+                                <a href="{% url 'blog-detail' post.slug %}" class="text-decoration-none text-dark">
+                                    {{ post.title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-1" style="font-size: 0.9rem;">
+                                By {{ post.author.username }} | {{ post.published_date|date:"M d, Y" }}
+                                {% if post.category %} | <span class="text-info">{{ post.category.name }}</span>{% endif %}
+                            </p>
+                            <p class="mb-2" style="font-size: 0.95rem; max-height: 3em; overflow: hidden; text-overflow: ellipsis;">
+                                {{ post.excerpt }}
+                            </p>
+                            <a href="{% url 'blog-detail' post.slug %}" class="btn btn-sm btn-primary">Read More</a>
+                        </div>
+                    </div>
+                    <hr>
+                {% endfor %}
+            {% else %}
+                <p>No blog posts available yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-md-4">
+            <!-- Categories -->
+            <h5 class="fw-bold">Categories</h5>
+            <ul class="list-unstyled">
+                {% for category in categories %}
+                    <li><a href="#">{{ category.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <!-- Recent Posts -->
+            <h5 class="fw-bold mt-4">Recent Posts</h5>
+            <ul class="list-unstyled">
+                {% for recent in recent_posts %}
+                    <li><a href="{% url 'blog-detail' recent.slug %}">{{ recent.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

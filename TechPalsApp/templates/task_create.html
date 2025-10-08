@@ -1,0 +1,115 @@
+{% extends base_template %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Assign Task to Group via Booking</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="booking" class="form-label">Select Booking</label>
+      <select name="booking" id="booking" class="form-select" required>
+        <option value="">-- Select a Booking --</option>
+        {% for booking in bookings %}
+          <option value="{{ booking.id }}">
+            {{ booking.booking_service.service_name }} | {{ booking.booking_user.username }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="group" class="form-label">Select Group</label>
+      <select name="group" id="group" class="form-select" required>
+        <option value="">-- Select a Group --</option>
+        {% for group in groups %}
+          <option value="{{ group.id }}">{{ group.group_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Task Title</label>
+      <input type="text" name="title" id="title" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Task Description</label>
+      <textarea name="description" id="description" rows="3" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="due_date" class="form-label">Due Date</label>
+      <input type="date" name="due_date" id="due_date" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Assign Task</button>
+    <a href="{% url 'task-list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+
+<!-- 
+
+
+<div class="container mt-4">
+  <h2>Assign Task to Group via Booking</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="booking" class="form-label">Select Booking (without Group)</label>
+      <select name="booking" id="booking" class="form-select" required>
+        <option value="">-- Select a Booking --</option>
+        {% for booking in bookings %}
+          <option value="{{ booking.id }}">
+            {{ booking.booking_service.service_name }} | {{ booking.booking_user.username }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="group" class="form-label">Select Group to Assign</label>
+      <select name="group" id="group" class="form-select" required>
+        <option value="">-- Select a Group --</option>
+        {% for group in groups %}
+          <option value="{{ group.id }}">{{ group.group_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Task Title</label>
+      <input type="text" name="title" id="title" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Task Description</label>
+      <textarea name="description" id="description" rows="3" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="due_date" class="form-label">Due Date</label>
+      <input type="date" name="due_date" id="due_date" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Assign Task</button>
+    <a href="{% url 'task-list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+-->

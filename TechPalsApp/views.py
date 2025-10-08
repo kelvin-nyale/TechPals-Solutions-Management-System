@@ -5,8 +5,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 from django.db import models
 from django.contrib.auth.decorators import login_required, user_passes_test
-from . models import Profile, Service, Group, GroupBooking, GroupMessage, GroupReport
+from . models import Profile, Service, Group, GroupBooking, GroupMessage, GroupReport, Booking, Task, Post, Category
 from django.http import HttpResponseForbidden
+from datetime import datetime, date
+from django.core.paginator import Paginator
+from .forms import PostForm
 
 # Create your views here.
 def index(request):
@@ -321,6 +324,189 @@ def delete_service(request, service_id):
     messages.success(request, f'{service.service_name} deleted successfully')
     return redirect('service-list')
 
+# Bookings management
+
+@login_required
+def make_booking(request):
+    # Determine base_template based on user role
+    if request.user.is_superuser:
+        base_template = 'base_admin.html'
+    elif request.user.is_staff:
+        base_template = 'base_staff.html'
+    else:
+        base_template = 'base_user.html'
+
+    if request.method == 'POST':
+        booking_user_id = request.POST.get('booking_user') if request.user.is_superuser else request.user.id
+        booking_service_id = request.POST.get('booking_service')
+        due_date_str = request.POST.get('due_date')
+
+        # Convert due_date string to date object
+        try:
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid due date format.")
+            return _render_booking_form(request, base_template, due_date_str, booking_service_id, booking_user_id)
+
+        # Validate due date is not today or in the past
+        if due_date <= date.today():
+            messages.error(request, "Due date cannot be today or in the past.")
+            return _render_booking_form(request, base_template, due_date_str, booking_service_id, booking_user_id)
+
+        # Get user and service objects
+        try:
+            booking_user = User.objects.get(id=booking_user_id)
+            booking_service = Service.objects.get(id=booking_service_id)
+        except (User.DoesNotExist, Service.DoesNotExist):
+            messages.error(request, "Invalid user or service selected.")
+            return redirect('make_booking')  # update URL name if needed
+
+        # Save the booking
+        booking = Booking(
+            booking_user=booking_user,
+            booking_service=booking_service,
+            due_date=due_date
+        )
+        try:
+            booking.full_clean()
+            booking.save()
+        except ValidationError as e:
+            messages.error(request, e.message_dict)
+            return _render_booking_form(request, base_template, due_date_str, booking_service_id, booking_user_id)
+
+        messages.success(request, "Booking created successfully.")
+        return redirect('booking-list')  # update URL name if needed
+
+    # GET request: render form with defaults
+    booking_user_id = request.user.id if not request.user.is_superuser else None
+    return _render_booking_form(request, base_template, '', None, booking_user_id)
+
+
+def _render_booking_form(request, base_template, input_due_date, selected_service_id, selected_user_id):
+    context = {
+        'input_due_date': input_due_date,
+        'selected_service_id': selected_service_id,
+        'base_template': base_template,
+        'services': Service.objects.all(),
+    }
+    if request.user.is_superuser:
+        context['users'] = User.objects.all()
+        context['selected_user_id'] = selected_user_id
+
+    return render(request, 'booking.make.html', context)
+
+
+@login_required
+def booking_list(request):
+    user = request.user
+
+    if user.is_superuser or user.is_staff:
+        # Admin and staff see all bookings
+        bookings = Booking.objects.all()
+    else:
+        # Normal users see only their own bookings
+        bookings = Booking.objects.filter(booking_user=user)
+
+    if user.is_superuser:
+        base_template = 'base_admin.html'
+    elif user.is_staff:
+        base_template = 'base_staff.html'
+    else:
+        base_template = 'base_user.html'
+
+    return render(request, 'bookings.html', {
+        'bookings': bookings,
+        'base_template': base_template,
+        'user_role': 'admin' if user.is_superuser else 'staff' if user.is_staff else 'user'
+    })
+
+
+@login_required
+def update_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    # Permissions check
+    if not request.user.is_superuser and request.user != booking.booking_user:
+        messages.error(request, "You do not have permission to update this booking.")
+        return redirect('booking-list')
+
+    # Determine base template
+    if request.user.is_superuser:
+        base_template = 'base_admin.html'
+    elif request.user.is_staff:
+        base_template = 'base_staff.html'
+    else:
+        base_template = 'base_user.html'
+
+    # defining local variable before using it
+    def render_update_form(error=None):
+        return render(request, 'booking.update.html', {
+            'booking': booking,
+            'services': Service.objects.all(),
+            'users': User.objects.all(),
+            'base_template': base_template,
+            'error': error
+        })
+
+    if request.method == 'POST':
+        booking_service_id = request.POST.get('booking_service')
+        due_date_str = request.POST.get('due_date')
+
+        # Admin can change user
+        if request.user.is_superuser:
+            booking_user_id = request.POST.get('booking_user')
+            try:
+                booking.booking_user = User.objects.get(id=booking_user_id)
+            except User.DoesNotExist:
+                return render_update_form("Invalid user.")
+
+        try:
+            booking.booking_service = Service.objects.get(id=booking_service_id)
+        except Service.DoesNotExist:
+            return render_update_form("Invalid service.")
+
+        try:
+            booking.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return render_update_form("Invalid date format.")
+
+        if booking.due_date <= date.today():
+            return render_update_form("Due date cannot be today or in the past.")
+
+        try:
+            booking.full_clean()
+            booking.save()
+            messages.success(request, "Booking updated successfully.")
+            return redirect('booking-list')
+        except ValidationError as e:
+            return render_update_form(e.message_dict)
+
+    # If GET request, show form
+    return render_update_form()
+
+
+@login_required
+def delete_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Staff cannot delete bookings.")
+        return redirect('booking-list')
+    if not request.user.is_superuser and booking.booking_user != request.user:
+        messages.error(request, "You do not have permission to delete this booking.")
+        return redirect('booking-list')
+
+    booking.delete()
+    messages.success(request, "Booking deleted successfully.")
+    return redirect('booking-list')
+
+
+@login_required
+def cancel_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.delete()
+    return redirect('booking-list')
+
 # Groups management
 @login_required
 @user_passes_test(admin_required)
@@ -401,32 +587,6 @@ def group_chat(request, group_id):
 
     return render(request, 'group_chat.html', context)
 
-# @login_required
-# def group_detail(request, group_id):
-#     group = get_object_or_404(Group, id=group_id)
-#     base_template = get_base_template(request.user)
-
-#     if request.user != group.group_leader and request.user not in group.group_members.all():
-#         return HttpResponseForbidden("You are not a member of this group.")
-
-#     messages = group.messages.order_by('timestamp')  # Assuming GroupMessage related_name is 'messages'
-#     group_booking = group.group_bookings.first()  # Correct related_name
-#     group_report = None
-#     if group_booking:
-#         group_report = getattr(group_booking, 'groupreport', None)
-
-#     group_booking = group.group_bookings.first()
-
-#     context = {
-#         'group': group,
-#         'group_booking': group_booking,
-#         'group_report': group_report,
-#         'messages': messages,
-#         'user': request.user,
-#         'base_template': base_template,
-#     }
-#     return render(request, 'group_detail.html', context)
-
 
 @login_required
 def post_group_message(request, group_id):
@@ -456,6 +616,59 @@ def post_group_message(request, group_id):
         return HttpResponseBadRequest("Invalid request method.")
 
 
+@login_required
+def edit_group(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+
+    # Only group leader or admin can edit
+    if not (request.user == group.group_leader or request.user.is_superuser):
+        messages.error(request, "You do not have permission to edit this group.")
+        return redirect('group-detail', group_id)
+
+    users = User.objects.all()
+
+    if request.method == 'POST':
+        group_name = request.POST.get('group_name')
+        group_leader_id = request.POST.get('group_leader')
+        group_member_ids = request.POST.getlist('group_members')
+
+        # Update fields
+        group.group_name = group_name
+
+        try:
+            group.group_leader = User.objects.get(id=group_leader_id)
+        except User.DoesNotExist:
+            messages.error(request, "Invalid leader selected.")
+            return redirect('edit-group', group_id)
+
+        group.save()
+        group.group_members.set(group_member_ids)  # update many-to-many
+        group.save()
+
+        messages.success(request, "Group updated successfully.")
+        if request.user.is_superuser:
+            return redirect('group-list')  # Admins go to group list
+        else:
+            return redirect('group-chat', group_id)  # Others go to group chat
+
+    base_template = (
+        'base_admin.html' if request.user.is_superuser else
+        'base_staff.html' if request.user.is_staff else
+        'base_user.html'
+    )
+
+    return render(request, 'group_edit.html', {
+        'group': group,
+        'users': users,
+        'base_template': base_template,
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_group(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    group.delete()
+    return redirect('group-list')
 
 @login_required
 def submit_group_report(request, group_booking_id):
@@ -478,47 +691,198 @@ def submit_group_report(request, group_booking_id):
     })
 
 @login_required
-def edit_group(request, group_id):
-    group = get_object_or_404(Group, id=group_id)
-
-    if request.user != group.group_leader:
-        return HttpResponseForbidden("Only the group leader can edit this group.")
-
-    users = User.objects.filter(is_staff=True)
-    base_template = get_base_template(request.user)
-
+@user_passes_test(lambda u: u.is_superuser)
+def create_task(request):
     if request.method == 'POST':
-        group_name = request.POST.get('group_name')
-        group_leader_id = request.POST.get('group_leader')
-        group_member_ids = request.POST.getlist('group_members')
+        booking_id = request.POST.get('booking')
+        group_id = request.POST.get('group')
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        due_date = request.POST.get('due_date')
 
-        if not group_name or not group_leader_id or not group_member_ids:
-            return render(request, 'groups/edit_group.html', {
-                'group': group,
-                'users': users,
-                'error': 'Please fill all fields.',
-                'base_template': base_template
-            })
+        # Validate booking and group
+        try:
+            booking = Booking.objects.get(id=booking_id)
+            group = Group.objects.get(id=group_id)
+        except (Booking.DoesNotExist, Group.DoesNotExist):
+            messages.error(request, "Invalid booking or group selected.")
+            return redirect('create-task')
 
-        new_leader = get_object_or_404(User, id=group_leader_id)
-        members = User.objects.filter(id__in=group_member_ids)
+        # Validate due date
+        try:
+            parsed_due_date = date.fromisoformat(due_date)
+        except ValueError:
+            messages.error(request, "Invalid due date format.")
+            return redirect('create-task')
 
-        group.group_name = group_name
-        group.group_leader = new_leader
-        group.group_members.set(members)
-        group.save()
+        if parsed_due_date < date.today():
+            messages.error(request, "Due date cannot be in the past.")
+            return redirect('create-task')
 
-        return redirect('group-list', group_id=group.id)
+        # Create or update GroupBooking
+        group_booking, created = GroupBooking.objects.get_or_create(
+            booking=booking,
+            defaults={'group': group, 'due_date': parsed_due_date}
+        )
+        if not created:
+            group_booking.group = group
+            group_booking.due_date = parsed_due_date
+            group_booking.save()
 
-    return render(request, 'group_edit.html', {
-        'group': group,
-        'users': users,
-        'base_template': base_template
+        # Create Task
+        Task.objects.create(
+            title=title,
+            description=description,
+            due_date=parsed_due_date,
+            booking=booking,
+        )
+
+        messages.success(request, "Task assigned successfully.")
+        return redirect('task-list')
+
+    else:
+        # GET request, show all bookings and groups to assign
+        bookings = Booking.objects.all()
+        groups = Group.objects.all()
+
+        return render(request, 'task_create.html', {
+            'bookings': bookings,
+            'groups': groups,
+            'base_template': 'base_admin.html',
+        })
+
+
+@login_required
+def staff_task_list(request):
+    today = date.today()
+
+    if request.user.is_superuser:
+        # Admin sees all upcoming tasks
+        tasks = Task.objects.filter(due_date__gte=today).order_by('due_date')
+        base_template = 'base_admin.html'
+    elif request.user.is_staff:
+        # Staff see tasks assigned to their groups
+        user_groups = request.user.custom_groups.all()
+        tasks = Task.objects.filter(
+            booking__group_booking__group__in=user_groups,
+            due_date__gte=today
+        ).distinct().order_by('due_date')
+        base_template = 'base_staff.html'
+    else:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("You do not have permission to view this page.")
+
+    return render(request, 'task_list.html', {
+        'tasks': tasks,
+        'base_template': base_template,
     })
-    
+
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
-def delete_group(request, group_id):
-    group = get_object_or_404(Group, id=group_id)
-    group.delete()
-    return redirect('group-list')
+def update_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    bookings = Booking.objects.exclude(group__isnull=True)
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        due_date = request.POST.get('due_date', '')
+        booking_id = request.POST.get('booking')
+
+        try:
+            due_date_parsed = datetime.strptime(due_date, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid due date format.")
+            return render(request, 'task.update.html', {
+                'task': task, 'bookings': bookings, 'base_template': 'base_admin.html'
+            })
+
+        task.title = title
+        task.description = description
+        task.due_date = due_date_parsed
+        task.booking = Booking.objects.get(id=booking_id)
+        task.save()
+
+        messages.success(request, "Task updated successfully.")
+        return redirect('task-list')
+
+    return render(request, 'tasks.update.html', {
+        'task': task,
+        'bookings': bookings,
+        'base_template': 'base_admin.html',
+    })
+
+    
+@login_required
+@user_passes_test(lambda u: u.is_superuser)  # Only admin can delete
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    task.save()
+    return redirect('task-list', {'task': task})
+
+## Blog posts management
+@login_required
+def create_post(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES)  # request.FILES here
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect('admin-dashboard')
+    else:
+        form = PostForm()
+
+    base_template = 'base_admin.html' if request.user.is_superuser else 'base.html'
+
+    return render(request, 'blog_post.html', {
+        'form': form,
+        'base_template': base_template,
+    })
+
+
+def blog_list(request):
+    post_list = Post.objects.order_by('-published_date')
+    paginator = Paginator(post_list, 5)  # 5 posts per page
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
+
+    categories = Category.objects.all()
+    recent_posts = Post.objects.order_by('-published_date')[:5]
+
+    return render(request, 'blog_list.html', {
+        'posts': posts,
+        'categories': categories,
+        'recent_posts': recent_posts,
+    })
+
+
+def blog_detail(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    categories = Category.objects.all()
+    recent_posts = Post.objects.order_by('-published_date')[:5]
+
+    return render(request, 'blog_detail.html', {
+        'post': post,
+        'categories': categories,
+        'recent_posts': recent_posts,
+    })
+
+
+def blog_category(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    post_list = category.posts.order_by('-published_date')
+    paginator = Paginator(post_list, 5)
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
+
+    categories = Category.objects.all()
+    recent_posts = Post.objects.order_by('-published_date')[:5]
+
+    return render(request, 'blog_list.html', {
+        'posts': posts,
+        'categories': categories,
+        'recent_posts': recent_posts,
+        'current_category': category,
+    })
