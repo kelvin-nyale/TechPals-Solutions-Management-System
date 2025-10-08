@@ -122,7 +122,7 @@ USE_TZ = True
 
 LOGIN_URL = 'login'
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

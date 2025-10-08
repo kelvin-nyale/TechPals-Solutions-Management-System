@@ -9,11 +9,14 @@ from . models import Profile, Service, Group, GroupBooking, GroupMessage, GroupR
 from django.http import HttpResponseForbidden
 from datetime import datetime, date
 from django.core.paginator import Paginator
-from .forms import PostForm
+from .forms import PostForm, ContactForm
 
 # Create your views here.
 def index(request):
     return render(request, 'index.html')
+
+def about(request):
+    return render(request, 'about.html')
 
 def register(request):
     if request.method == 'POST':
@@ -277,7 +280,7 @@ def add_service(request):
     
     return render(request, 'service.add.html')
 
-@login_required
+# @login_required
 def services(request):
     services = Service.objects.all()
     user = request.user
@@ -286,8 +289,10 @@ def services(request):
         base_template = 'base_admin.html'
     elif user.is_authenticated and user.is_staff:
         base_template = 'base_staff.html'
-    else:
+    elif user.is_authenticated and not user.is_staff:
         base_template = 'base_user.html'
+    else:
+        base_template = 'base.html'
         
     return render(request, 'services.html', {
         'services': services,
@@ -886,3 +891,16 @@ def blog_category(request, slug):
         'recent_posts': recent_posts,
         'current_category': category,
     })
+    
+## Contact management
+def contact(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            # You can process the data, send email, save to DB, etc.
+            messages.success(request, "Thanks for reaching out! We'll get back to you shortly.")
+            return redirect('contact')  # redirects to the same page
+    else:
+        form = ContactForm()
+    
+    return render(request, 'contact.html', {'form': form})
